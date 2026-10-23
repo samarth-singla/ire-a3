@@ -1,0 +1,121 @@
+{
+  "sift": {
+    "dataset": "sift",
+    "n_base": 1000000,
+    "n_queries_checked": 10000,
+    "k": 10,
+    "set_match_fraction": 0.9935,
+    "n_mismatched_queries": 65,
+    "n_mismatches_explained_by_ties": 65,
+    "recall_ours_vs_file": 1.0,
+    "recall_file_vs_ours": 1.0,
+    "file_distance_check": {
+      "conversion": "file L2 distance squared",
+      "max_abs_diff": 0.010293430648744106,
+      "max_rel_diff": 1.1882207822139543e-07
+    },
+    "mismatch_examples": [
+      {
+        "query": 170,
+        "only_ours": [
+          196049
+        ],
+        "only_ours_sqdist": [
+          40644.0
+        ],
+        "only_file": [
+          274865
+        ],
+        "only_file_sqdist": [
+          40644.0
+        ],
+        "our_d10": 40644.0
+      },
+      {
+        "query": 409,
+        "only_ours": [
+          201161
+        ],
+        "only_ours_sqdist": [
+          51225.0
+        ],
+        "only_file": [
+          265439
+        ],
+        "only_file_sqdist": [
+          51225.0
+        ],
+        "our_d10": 51225.0
+      },
+      {
+        "query": 460,
+        "only_ours": [
+          198868
+        ],
+        "only_ours_sqdist": [
+          64368.0
+        ],
+        "only_file": [
+          277684
+        ],
+        "only_file_sqdist": [
+          64368.0
+        ],
+        "our_d10": 64368.0
+      },
+      {
+        "query": 513,
+        "only_ours": [
+          196914
+        ],
+        "only_ours_sqdist": [
+          69341.0
+        ],
+        "only_file": [
+          275730
+        ],
+        "only_file_sqdist": [
+          69341.0
+        ],
+        "our_d10": 69341.0
+      },
+      {
+        "query": 614,
+        "only_ours": [
+          195408
+        ],
+        "only_ours_sqdist": [
+          44518.0
+        ],
+        "only_file": [
+          274224
+        ],
+        "only_file_sqdist": [
+          44518.0
+        ],
+        "our_d10": 44518.0
+      }
+    ],
+    "note": "Recall is tie-aware (rel 1e-5, abs 1e-6 on squared L2), with true distances recomputed from the vectors in float64. 'ours_vs_file' uses the file's 10th neighbour distance as d10; 'file_vs_ours' uses ours.",
+    "metric_note": "sift: file metric euclidean (file distances = L2, not squared); we use squared L2"
+  },
+  "glove": {
+    "dataset": "glove",
+    "n_base": 1183514,
+    "n_queries_checked": 10000,
+    "k": 10,
+    "set_match_fraction": 1.0,
+    "n_mismatched_queries": 0,
+    "n_mismatches_explained_by_ties": 0,
+    "recall_ours_vs_file": 1.0,
+    "recall_file_vs_ours": 1.0,
+    "file_distance_check": {
+      "conversion": "2 x file angular distance (= squared L2 for unit vectors)",
+      "max_abs_diff": 9.099528019973491e-08,
+      "max_rel_diff": 1.6301232387009422e-07
+    },
+    "mismatch_examples": [],
+    "note": "Recall is tie-aware (rel 1e-5, abs 1e-6 on squared L2), with true distances recomputed from the vectors in float64. 'ours_vs_file' uses the file's 10th neighbour distance as d10; 'file_vs_ours' uses ours. GloVe vectors are L2-normalised, so Euclidean order = angular order.",
+    "metric_note": "glove: file metric angular (file distances = 1 - cosine); we use squared L2; base+queries L2-normalised (zero-norm rows left as zeros: base 0, queries 0)"
+  }
+}

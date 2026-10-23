@@ -8,5 +8,6 @@ matplotlib==3.11.2
 pytest==9.1.1
 psutil==7.2.2
 pypdf==6.21.2
+threadpoolctl==3.7.0
 # Optional cross-check only, not used for reported numbers:
 # hnswlib

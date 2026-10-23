@@ -34,6 +34,7 @@ TUNE = slice(0, 5000)
 TEST = slice(5000, 10000)
 TUNE_N = 2000                # Part 2 full mode: only the first TUNE_N tune queries are timed
 EXACT_SINGLE_N = 1000        # Part 1: exact one-at-a-time timing uses the first N test queries
+AGREE_N: int | None = None   # Part 1 agreement check: None = all 10,000 queries (always full-size data)
 
 # ---------------------------------------------------------------- timing
 REPEATS = 3                  # median of REPEATS timed runs
@@ -111,6 +112,7 @@ QUICK = {
     "TEST": slice(5000, 6000),
     "TUNE_N": 1000,
     "EXACT_SINGLE_N": 1000,
+    "AGREE_N": 1000,           # 500 if quick mode would exceed 15 min
     "REPEATS": 3,
     "RESULTS_DIR": RESULTS_QUICK_DIR,
     "GRIDS": {
@@ -147,6 +149,7 @@ def get_config(quick: bool = False) -> dict:
         "N_BASE": None,      # None = all base vectors in the file
         "SEED": SEED, "K": K, "GT_K": GT_K,
         "TUNE": TUNE, "TEST": TEST, "TUNE_N": TUNE_N, "EXACT_SINGLE_N": EXACT_SINGLE_N,
+        "AGREE_N": AGREE_N,
         "REPEATS": REPEATS, "WARMUP": WARMUP, "PIN_CPU": PIN_CPU,
         "RESULTS_DIR": RESULTS_DIR,
         "GRIDS": GRIDS, "PART3": PART3, "PART4": PART4,
