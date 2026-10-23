@@ -197,7 +197,9 @@ For each dataset × index family × build setting:
 1. Build (or load from cache).
 2. For each search-param value in the sweep: run single-query timing on **both** halves (tune half for selecting operating points, test half for reporting). Compute recall@10 on each half. To save time in full mode, the tune half may use `TUNE_N = 2000` queries — state this in the README.
 3. One CSV row per (build, search param, split); at the end, replace the `part=2` rows in `results.csv` with them.
-4. Skip the rest of a sweep early once test recall ≥ 0.999 **and** the previous two points were also ≥ 0.999 (saves time; note it).
+4. Skip the rest of a sweep early once test recall ≥ 0.999 for **two consecutive** points (saves time; note it). Skip nprobe values larger than nlist.
+5. **Resumable:** each row is appended to `results.csv` and flushed as soon as it is measured; on restart, points already present (same dataset, n_base, index, build params, search param, split, n_queries) are skipped. Flags: `--rebuild` (rebuild indexes), `--fresh` (re-time everything in scope), `--only <dataset>[,<family>]`, `--estimate` (runtime estimate, warns above 8 h), `--report-only`.
+6. **Noise canary:** before each build config's sweep, time a fixed exact search (200 queries on the first 20K base vectors, single thread, pinned) and store it as `canary_qps` in `extra`.
 
 `annbench/frontier.py`:
 - `pareto(points)` — keep points not dominated in (recall ↑, qps ↑).

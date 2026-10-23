@@ -5,6 +5,10 @@ with its ``part`` value ("1", "2", "3", "4", "q4"), collects its rows in memory,
 calls ``replace_part_rows``, which rewrites the file with every other part's rows unchanged and
 its own old rows replaced (temp file + rename, so a crashed run leaves the old rows in place).
 
+Long runs (Part 2) instead ``append_row`` each row as soon as it is measured (flushed to disk),
+skip points whose ``row_key`` is already present when restarted, and finish with
+``prune_part_rows`` (drop rows outside the current grid, de-duplicate).
+
 Every row's ``extra`` JSON must contain ``pinned_cpu`` (the logical CPU the search was pinned
 to, or null).
 """
@@ -103,14 +107,87 @@ def _encode(row: dict) -> dict:
 
 
 def read_rows(path: Path) -> list[dict]:
-    """Raw rows (strings) of an existing results.csv; [] if it does not exist."""
-    if not path.exists():
+    """Raw rows (strings) of an existing results.csv; [] if it does not exist.
+
+    A row cut short by a crash during an append (missing or extra fields) is dropped with a
+    warning; it is removed from the file by the next rewrite.
+    """
+    if not path.exists() or path.stat().st_size == 0:
         return []
     with path.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         if reader.fieldnames != SCHEMA:
             raise ValueError(f"{path} has columns {reader.fieldnames}, expected the fixed schema")
-        return list(reader)
+        rows, bad = [], 0
+        for r in reader:
+            if None in r or any(v is None for v in r.values()):
+                bad += 1
+                continue
+            rows.append(r)
+    if bad:
+        print(f"[results] WARNING: ignored {bad} incomplete row(s) in {path}")
+    return rows
+
+
+# columns that identify one measured point (resume / de-duplication key)
+KEY_COLUMNS = ("part", "dataset", "n_base", "index", "build_params", "search_param", "split",
+               "n_queries")
+
+
+def row_key(row: dict) -> tuple:
+    """Key of a row read from the CSV (strings) or built by ``make_row`` (Python values)."""
+    enc = _encode(row) if not all(isinstance(row.get(c, ""), str) for c in KEY_COLUMNS) else row
+    return tuple(str(enc.get(c, "")) for c in KEY_COLUMNS)
+
+
+def append_row(results_dir: Path, row: dict) -> None:
+    """Append one row to ``results_dir/results.csv`` and flush it to disk immediately.
+
+    Used by long runs (Part 2) so a crash or sleep loses at most the point being measured.
+    """
+    results_dir = Path(results_dir)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    path = results_dir / "results.csv"
+    new = not path.exists() or path.stat().st_size == 0
+    needs_newline = False
+    if not new:
+        with path.open("rb") as f:                         # check the header only
+            header = f.readline().decode("utf-8").strip().split(",")
+            f.seek(-1, os.SEEK_END)
+            needs_newline = f.read(1) != b"\n"             # a crash left a half-written line
+        if header != SCHEMA:
+            raise ValueError(f"{path} has columns {header}, expected the fixed schema")
+    with path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=SCHEMA)
+        if new:
+            writer.writeheader()
+        if needs_newline:
+            f.write("\r\n")      # isolate the broken line; read_rows drops it as incomplete
+        writer.writerow(_encode(row))
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def prune_part_rows(results_dir: Path, part, keep) -> int:
+    """Rewrite results.csv keeping other parts' rows unchanged. Rows of ``part`` are kept only
+    if ``keep(row)`` is true, and duplicates (same ``row_key``) keep the latest. Returns the
+    number of ``part`` rows kept."""
+    part = str(part)
+    path = Path(results_dir) / "results.csv"
+    rows = read_rows(path)
+    others = [r for r in rows if r["part"] != part]
+    latest: dict[tuple, dict] = {}
+    for r in rows:
+        if r["part"] == part and keep(r):
+            latest[row_key(r)] = r                          # later rows win
+    tmp = path.with_name("results.csv.tmp")
+    with tmp.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=SCHEMA)
+        writer.writeheader()
+        writer.writerows(others)
+        writer.writerows(latest.values())
+    os.replace(tmp, path)
+    return len(latest)
 
 
 def replace_part_rows(results_dir: Path, part, rows: list[dict]) -> Path:

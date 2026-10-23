@@ -47,8 +47,16 @@ BUILD_THREADS: int | None = None  # index building: None = all logical CPUs (rec
 # None disables pinning. Pinning is a no-op where psutil has no cpu_affinity (macOS).
 PIN_CPU: int | None = 2
 
-# Part 2: stop a sweep early once test recall >= this for 3 consecutive points
+# Part 2: stop a sweep early once test recall >= EARLY_STOP_RECALL for EARLY_STOP_CONSECUTIVE
+# consecutive sweep points
 EARLY_STOP_RECALL = 0.999
+EARLY_STOP_CONSECUTIVE = 2
+PART2_FAMILIES = ("hnsw", "ivfflat", "ivfpq")
+# Noise canary: before each build config's sweep, time a fixed exact search (single thread,
+# pinned) so drift in machine state across a long run shows up in results.csv (extra.canary_qps)
+CANARY_N_BASE = 20_000
+CANARY_NQ = 200
+TIME_BUDGET_HOURS = 8        # --estimate warns above this
 TARGET_RECALLS = (0.90, 0.95)
 
 # ---------------------------------------------------------------- index grids (Section 3)
