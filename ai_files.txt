@@ -1,0 +1,30 @@
+.gitignore	AI-generated
+.gitattributes	AI-generated
+requirements.txt	AI-generated
+config.py	AI-generated
+README.md	AI-generated (stub)
+hypothesis.md	AI-generated (empty headings only)
+run_all.sh	AI-generated (stub)
+annbench/__init__.py	AI-generated
+annbench/data.py	AI-generated (stub)
+annbench/metrics.py	AI-generated (stub)
+annbench/timing.py	AI-generated (stub)
+annbench/indexes.py	AI-generated (stub)
+annbench/sizes.py	AI-generated (stub)
+annbench/results_io.py	AI-generated (stub)
+annbench/frontier.py	AI-generated (stub)
+annbench/plots.py	AI-generated (stub)
+annbench/tables.py	AI-generated (stub)
+annbench/synth.py	AI-generated (stub)
+experiments/part1_exact.py	AI-generated (stub)
+experiments/part2_benchmark.py	AI-generated (stub)
+experiments/part3_experiment.py	AI-generated (stub)
+experiments/part4_experiment.py	AI-generated (stub)
+experiments/q4_projection.py	AI-generated (stub)
+experiments/make_tables.py	AI-generated (stub)
+scripts/download_data.sh	AI-generated
+scripts/env_info.py	AI-generated
+scripts/make_submission.sh	AI-generated (stub)
+tests/test_recall.py	AI-generated (stub)
+report/.gitkeep	AI-generated (placeholder)
+ai_files.txt	AI-generated

@@ -1,0 +1,16 @@
+data/
+cache/
+results/
+results_quick/
+*.hdf5
+*.index
+*.bin
+__pycache__/
+.venv/
+*.zip
+report/*.aux
+report/*.log
+report/*.out
+report/*.fls
+report/*.fdb_latexmk
+.pytest_cache/
