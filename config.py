@@ -39,6 +39,11 @@ EXACT_SINGLE_N = 1000        # Part 1: exact one-at-a-time timing uses the first
 REPEATS = 3                  # median of REPEATS timed runs
 WARMUP = 1                   # untimed warm-up passes
 SEARCH_THREADS = 1           # all timed searches are single-threaded
+# Logical CPU the process is pinned to (psutil cpu_affinity) during timed searches only, so the
+# single search thread is not moved between performance and efficiency cores. On the report
+# machine (i7-13700H) logical CPUs 0-11 are P-core threads and 12-19 are E-cores; 2 = P-core.
+# None disables pinning. Pinning is a no-op where psutil has no cpu_affinity (macOS).
+PIN_CPU: int | None = 2
 
 # Part 2: stop a sweep early once test recall >= this for 3 consecutive points
 EARLY_STOP_RECALL = 0.999
@@ -142,7 +147,7 @@ def get_config(quick: bool = False) -> dict:
         "N_BASE": None,      # None = all base vectors in the file
         "SEED": SEED, "K": K, "GT_K": GT_K,
         "TUNE": TUNE, "TEST": TEST, "TUNE_N": TUNE_N, "EXACT_SINGLE_N": EXACT_SINGLE_N,
-        "REPEATS": REPEATS, "WARMUP": WARMUP,
+        "REPEATS": REPEATS, "WARMUP": WARMUP, "PIN_CPU": PIN_CPU,
         "RESULTS_DIR": RESULTS_DIR,
         "GRIDS": GRIDS, "PART3": PART3, "PART4": PART4,
     }

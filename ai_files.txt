@@ -1,14 +1,15 @@
 .gitignore	AI-generated
 .gitattributes	AI-generated
 requirements.txt	AI-generated
+environment.yml	AI-generated
 config.py	AI-generated
 README.md	AI-generated (stub)
 hypothesis.md	AI-generated (empty headings only)
-run_all.sh	AI-generated (stub)
+run_all.sh	AI-generated (stub + python/faiss check)
 annbench/__init__.py	AI-generated
 annbench/data.py	AI-generated (stub)
 annbench/metrics.py	AI-generated (stub)
-annbench/timing.py	AI-generated (stub)
+annbench/timing.py	AI-generated (stub, docstring)
 annbench/indexes.py	AI-generated (stub)
 annbench/sizes.py	AI-generated (stub)
 annbench/results_io.py	AI-generated (stub)
@@ -28,3 +29,4 @@ scripts/make_submission.sh	AI-generated (stub)
 tests/test_recall.py	AI-generated (stub)
 report/.gitkeep	AI-generated (placeholder)
 ai_files.txt	AI-generated
+implementation.md	AI-assisted (plan written by Samarth; CPU-pinning note in Step 4 added by AI)

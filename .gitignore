@@ -14,3 +14,5 @@ report/*.out
 report/*.fls
 report/*.fdb_latexmk
 .pytest_cache/
+# assignment handout (not part of the submission's code/)
+/Assignment 3 Benchmarking Approximate Nearest Neighbour Search (1).pdf

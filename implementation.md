@@ -152,6 +152,7 @@ Run `pytest -q` and show the result.
   One warm-up pass (not timed) first.
 - `time_batch(search_fn, xq, k, repeats)` — one call with all queries.
 - Note in the README: Python loop overhead (~a few µs per call) is included and is the same for all indexes.
+- **CPU pinning (hybrid CPU).** The i7-13700H mixes performance and efficiency cores, and Windows may move the single search thread between them, which adds timing noise. During timed searches only, pin the process to one P-core logical CPU with `psutil.Process().cpu_affinity([config.PIN_CPU])` (default `PIN_CPU = 2`; on this machine logical CPUs 0–11 are P-core threads and 12–19 are E-cores). Restore the previous affinity afterwards, so index building still uses all cores. Make it a context manager (e.g. combined with `set_single_thread()`). It is a no-op when `PIN_CPU is None`, when `cpu_affinity` is unsupported (macOS), or when the CPU id does not exist on the machine (print a warning). Record the pinned CPU (or `null`) in the `extra` JSON of every `results.csv` row as `"pinned_cpu"`.
 
 ---
 

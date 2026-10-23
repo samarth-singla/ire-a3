@@ -1,0 +1,17 @@
+# Conda environment used for the report (recommended on Windows; also works on Linux/macOS).
+#   conda env create -f environment.yml
+#   conda activate ire-a3
+# Same pins as requirements.txt. hnswlib is optional and not installed (HNSW uses faiss.IndexHNSWFlat).
+name: ire-a3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy=2.4.6
+  - h5py=3.16.0
+  - faiss-cpu=1.14.3
+  - pandas=3.1.0
+  - matplotlib=3.11.2
+  - pytest=9.1.1
+  - psutil=7.2.2
+  - pypdf=6.21.2

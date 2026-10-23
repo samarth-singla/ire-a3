@@ -1,7 +1,5 @@
-# Versions pinned from the conda-forge env used for the report (Python 3.11.17).
-# Install with conda-forge (recommended on Windows):
-#   conda create -n ire-a3 -c conda-forge python=3.11 faiss-cpu numpy h5py pandas matplotlib pytest psutil pypdf
-# or with pip:  pip install -r requirements.txt
+# Same pins as environment.yml (Python 3.11). All versions are on PyPI for Linux, macOS and Windows.
+# pip install -r requirements.txt
 numpy==2.4.6
 h5py==3.16.0
 faiss-cpu==1.14.3
@@ -10,5 +8,5 @@ matplotlib==3.11.2
 pytest==9.1.1
 psutil==7.2.2
 pypdf==6.21.2
-# Optional cross-check only (not installed in the report env; HNSW uses faiss.IndexHNSWFlat):
+# Optional cross-check only, not used for reported numbers:
 # hnswlib
