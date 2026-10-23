@@ -40,6 +40,7 @@ AGREE_N: int | None = None   # Part 1 agreement check: None = all 10,000 queries
 REPEATS = 3                  # median of REPEATS timed runs
 WARMUP = 1                   # untimed warm-up passes
 SEARCH_THREADS = 1           # all timed searches are single-threaded
+BUILD_THREADS: int | None = None  # index building: None = all logical CPUs (recorded per index)
 # Logical CPU the process is pinned to (psutil cpu_affinity) during timed searches only, so the
 # single search thread is not moved between performance and efficiency cores. On the report
 # machine (i7-13700H) logical CPUs 0-11 are P-core threads and 12-19 are E-cores; 2 = P-core.

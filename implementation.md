@@ -183,7 +183,7 @@ Use FAISS for all three (consistent implementation); hnswlib is optional as a cr
 
 - `build_hnsw(xb, M, efConstruction=200)` → `faiss.IndexHNSWFlat(d, M)`, set `hnsw.efConstruction` before `add`. Search param: `index.hnsw.efSearch = ef` (must be ≥ k).
 - `build_ivfflat(xb, nlist)` → `IndexIVFFlat(IndexFlatL2(d), d, nlist)`; train on a seeded random sample of `min(n, 64*nlist)` vectors (record the training size). Search param: `index.nprobe`.
-- `build_ivfpq(xb, nlist, m, nbits=8)` → `IndexIVFPQ(quantizer, d, nlist, m, nbits)`; same training rule (at least 256*... make sure PQ gets ≥ 10,000 training vectors). `m` must divide `d`.
+- `build_ivfpq(xb, nlist, m, nbits=8)` → `IndexIVFPQ(quantizer, d, nlist, m, nbits)`; train on a seeded random sample of `min(n, max(64*nlist, 10,000))` vectors. The coarse quantizer wants ~64 vectors per list, and each PQ sub-quantizer learns 2^nbits = 256 centroids, for which FAISS asks for at least 39 × 256 ≈ 10,000 training points; record the training size. `m` must divide `d`.
 - `build_ivfpq_refine(...)` (Part 3) → wrap with `faiss.IndexRefineFlat(ivfpq)`, `k_factor = 10` so the top 100 PQ candidates are re-ranked exactly.
 - Every builder returns `(index, build_time_s, build_threads, train_time_s)`.
 - **Cache** built indexes in `cache/` keyed by `(dataset, n_base, type, params)` with `faiss.write_index`; reload if present (`--rebuild` flag forces rebuild). Build time is always the measured value from when it was built (store it in a sidecar JSON next to the cached index).
