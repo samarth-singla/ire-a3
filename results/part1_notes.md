@@ -4,8 +4,8 @@ Exact search (`IndexFlatL2`), measured by `experiments/part1_exact.py`; numbers 
 
 | dataset | single-query QPS (1 thread) | batch QPS (1 thread) | batch QPS (all threads) | batch(1t) / single | batch(all) / single |
 |---|---|---|---|---|---|
-| sift | 28.4 | 250.8 | 640.2 (20 threads) | 8.8x | 22.5x |
-| glove | 33.1 | 257.5 | 278.3 (20 threads) | 7.8x | 8.4x |
+| sift | 30.8 | 341.9 | 761.3 (20 threads) | 11.1x | 24.7x |
+| glove | 34.4 | 347.6 | 382.9 (20 threads) | 10.1x | 11.1x |
 
 Single-query timing uses the first 1000 test queries; batch timing uses all 5000 test queries.
 
