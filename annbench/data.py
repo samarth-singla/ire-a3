@@ -21,6 +21,7 @@ import h5py
 import numpy as np
 
 import config
+from annbench.metrics import true_sq_dist
 
 _FILE_METRIC = {"sift": "euclidean (file distances = L2, not squared)",
                 "glove": "angular (file distances = 1 - cosine)"}
@@ -161,23 +162,9 @@ def get_ground_truth(name: str, n_base: int | None, k: int = config.GT_K, *,
     return ids, dist
 
 
-def exact_sq_dist(xq: np.ndarray, xb: np.ndarray, ids: np.ndarray,
-                  chunk: int = 500) -> np.ndarray:
-    """Squared L2 distance in float64 between each query and each of its ids ([nq, k]).
-
-    ids of -1 give +inf.
-    """
-    nq, k = ids.shape
-    out = np.empty((nq, k), dtype=np.float64)
-    for s in range(0, nq, chunk):
-        e = min(s + chunk, nq)
-        idc = ids[s:e]
-        valid = idc >= 0
-        vecs = xb[np.where(valid, idc, 0)].astype(np.float64)          # [c, k, d]
-        diff = vecs - xq[s:e, None, :].astype(np.float64)
-        d = np.einsum("ijk,ijk->ij", diff, diff)
-        out[s:e] = np.where(valid, d, np.inf)
-    return out
+# Squared L2 in float64 from the vectors; same function recall@10 uses, so ground-truth and
+# retrieved distances are on exactly the same scale.
+exact_sq_dist = true_sq_dist
 
 
 # ---------------------------------------------------------------- query splits

@@ -1,6 +1,5 @@
 data/
 cache/
-results/
 results_quick/
 *.hdf5
 *.index

@@ -1,32 +1,34 @@
-.gitignore	AI-generated
-.gitattributes	AI-generated
-requirements.txt	AI-generated
-environment.yml	AI-generated
-config.py	AI-generated
-README.md	AI-generated (stub)
-hypothesis.md	AI-generated (empty headings only)
-run_all.sh	AI-generated (stub + python/faiss check)
-annbench/__init__.py	AI-generated
-annbench/data.py	AI-generated
-annbench/metrics.py	AI-generated (stub)
-annbench/timing.py	AI-generated (stub, docstring)
-annbench/indexes.py	AI-generated (stub)
-annbench/sizes.py	AI-generated (stub)
-annbench/results_io.py	AI-generated (stub)
-annbench/frontier.py	AI-generated (stub)
-annbench/plots.py	AI-generated (stub)
-annbench/tables.py	AI-generated (stub)
-annbench/synth.py	AI-generated (stub)
-experiments/part1_exact.py	AI-generated (stub)
-experiments/part2_benchmark.py	AI-generated (stub)
-experiments/part3_experiment.py	AI-generated (stub)
-experiments/part4_experiment.py	AI-generated (stub)
-experiments/q4_projection.py	AI-generated (stub)
-experiments/make_tables.py	AI-generated (stub)
-scripts/download_data.sh	AI-generated
-scripts/env_info.py	AI-generated
-scripts/make_submission.sh	AI-generated (stub)
-tests/test_recall.py	AI-generated (stub)
-report/.gitkeep	AI-generated (placeholder)
-ai_files.txt	AI-generated
-implementation.md	AI-assisted (plan written by Samarth; CPU-pinning note in Step 4 added by AI)
+.claude/settings.json: human-written
+.gitattributes: AI-generated
+.gitignore: AI-generated
+README.md: AI-generated
+ai_files.txt: AI-generated
+annbench/__init__.py: AI-generated
+annbench/data.py: AI-generated
+annbench/frontier.py: AI-generated
+annbench/indexes.py: AI-generated
+annbench/metrics.py: AI-generated
+annbench/plots.py: AI-generated
+annbench/results_io.py: AI-generated
+annbench/sizes.py: AI-generated
+annbench/synth.py: AI-generated
+annbench/tables.py: AI-generated
+annbench/timing.py: AI-generated
+config.py: AI-generated
+environment.yml: AI-generated
+experiments/make_tables.py: AI-generated
+experiments/part1_exact.py: AI-generated
+experiments/part2_benchmark.py: AI-generated
+experiments/part3_experiment.py: AI-generated
+experiments/part4_experiment.py: AI-generated
+experiments/q4_projection.py: AI-generated
+hypothesis.md: AI-generated
+implementation.md: AI-assisted
+pytest.ini: AI-generated
+report/.gitkeep: AI-generated
+requirements.txt: AI-generated
+run_all.sh: AI-generated
+scripts/download_data.sh: AI-generated
+scripts/env_info.py: AI-generated
+scripts/make_submission.sh: AI-generated
+tests/test_recall.py: AI-generated

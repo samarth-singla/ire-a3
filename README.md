@@ -46,7 +46,20 @@ _To fill._
 
 ## Recall definition
 
-_Tie-aware recall@10 (Step 3)._
+Tie-aware recall@10 (`annbench/metrics.py`, tests in `tests/test_recall.py`):
+
+> For query q, let d₁₀ be the true squared-L2 distance of the 10th exact neighbour. A returned id
+> counts as correct if its true distance to q is ≤ d₁₀·(1+ε) + ε_abs, with ε = 1e-5 and
+> ε_abs = 1e-6. Duplicate ids and `-1` padding are ignored. recall@10(q) = min(#correct, 10) / 10,
+> and we report the mean over queries.
+
+- **Ties:** a returned point at the same distance as the 10th neighbour counts as correct, even if
+  the ground truth lists a different point at that distance.
+- **True distances:** each returned id's distance is recomputed from the vectors in float64. The
+  distances the index returns are never used, because PQ distances are approximate.
+- **Ground truth:** d₁₀ comes from our own exact top-100 (FAISS `IndexFlatL2`, distances recomputed
+  in float64), not from the data file.
+- Only the first 10 returned ids count. Returning fewer (e.g. IVF with a tiny `nprobe`) is allowed.
 
 ## Timing protocol
 
