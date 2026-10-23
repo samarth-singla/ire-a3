@@ -1,6 +1,6 @@
 # implementation.md — A3: Benchmarking ANN Search (CS4.406 IRE)
 
-Author of the assignment: **Samarth** (roll number: `<ROLLNO>`, fill in before submitting).
+Author of the assignment: **Samarth** (roll number: `2024101020`).
 This file is the instruction set for Claude Code. Read the whole file before doing anything, then work **one step at a time**.
 
 ---
@@ -71,7 +71,7 @@ code/                       # git repo root
 ├── scripts/
 │   ├── download_data.sh
 │   ├── env_info.py         # CPU, RAM, OS, Python, faiss/hnswlib/numpy versions
-│   └── make_submission.sh  # builds <ROLLNO>_A3.zip
+│   └── make_submission.sh  # builds 2024101020_A3.zip
 ├── tests/
 │   └── test_recall.py
 ├── report/                 # LaTeX source for report.pdf (Samarth writes prose)
@@ -321,7 +321,7 @@ echo "Done. See results/"
 
 ### Step 13 — Submission packaging (`scripts/make_submission.sh`)
 
-Builds `<ROLLNO>_A3.zip` (read `ROLLNO` from an env var; refuse if unset) containing **exactly**:
+Builds `2024101020_A3.zip` (roll number 2024101020, fixed) containing **exactly**:
 ```
 report.pdf
 code/            # full repo incl. .git, minus data/, cache/, results*/, *.zip, report build junk
