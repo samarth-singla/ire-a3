@@ -70,6 +70,8 @@ def collect() -> dict:
     try:
         import faiss
         info["faiss_max_threads"] = faiss.omp_get_max_threads()
+        # batch exact search uses BLAS only when n_queries * d >= this (FAISS 1.14.3)
+        info["faiss_distance_compute_blas_threshold"] = int(faiss.cvar.distance_compute_blas_threshold)
     except Exception:
         info["faiss_max_threads"] = None
     info.update(blas_info())

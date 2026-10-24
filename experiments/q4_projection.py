@@ -218,7 +218,7 @@ def write_outputs(cfg: dict, info: dict, scen: list[dict]) -> None:
         f"{RAM_GIB:.0f} GiB, 'no' = more. Recommendation rule: exact if it meets 100 ms and fits; "
         "otherwise the fastest recall-0.95 operating point that meets both (10M latencies are "
         "extrapolated). Single-thread, one query at a time.",
-        "tab:q4", align="lrrlllllll")
+        "tab:q4", align="lrrllllllp{4.5cm}")
 
     L = ["# Question 4 notes (DRAFT - Samarth to rewrite)", "",
          f"Scenarios: 150,000 or 10,000,000 vectors, {BUDGET_MS:.0f} ms per query, {RAM_GIB:.0f} GB "

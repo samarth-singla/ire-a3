@@ -1,6 +1,6 @@
 # Part 4 notes (DRAFT - Samarth to check and rewrite)
 
-Data: results.csv part=4 (full): 200,000 SIFT base + 200,000 added vectors, 2,000 queries (half tune, half test), shifts [np.float64(0.0), np.float64(0.25), np.float64(0.5), np.float64(1.0)]. Numbers are test QPS at the config chosen on tune for recall 0.95 ('nr' = not reached; the highest-recall config is used).
+Data: results.csv part=4 (full): 200,000 SIFT base + 200,000 added vectors, 2,000 queries (half tune, half test), shifts [0.0, 0.25, 0.5, 1.0]. Numbers are test QPS at the config chosen on tune for recall 0.95 ('nr' = not reached; the highest-recall config is used).
 
 ## What changed
 

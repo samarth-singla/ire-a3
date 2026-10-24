@@ -422,7 +422,7 @@ def make_table(summ: list[dict], out_dir: Path, cfg: dict, P: dict) -> list[Path
         "queries at the config chosen on the tune queries for recall ≥ 0.95 (test recall reported "
         "as measured; 'not reached': highest-recall config shown). Distance computations per query "
         "exclude the IVF coarse quantizer (nlist per query)." + quick,
-        "tab:part4", align="rllrrlrll")
+        "tab:part4", align="rllrrlrp{2.8cm}p{2.4cm}")
 
 
 def write_notes(summ: list[dict], out_dir: Path, cfg: dict, P: dict) -> Path:
@@ -439,7 +439,7 @@ def write_notes(summ: list[dict], out_dir: Path, cfg: dict, P: dict) -> Path:
     L = ["# Part 4 notes (DRAFT - Samarth to check and rewrite)", "",
          f"Data: results.csv part=4 ({'QUICK MODE' if cfg['QUICK'] else 'full'}): "
          f"{P['n_base']:,} SIFT base + {P['n_added']:,} added vectors, {P['n_queries']:,} queries "
-         f"(half tune, half test), shifts {shifts}. Numbers are test QPS at the config chosen on "
+         f"(half tune, half test), shifts {[float(x) for x in shifts]}. Numbers are test QPS at the config chosen on "
          "tune for recall 0.95 ('nr' = not reached; the highest-recall config is used).", "",
          "## What changed", "",
          "Only the shift: added vectors and queries are moved by shift x R along one fixed seeded "

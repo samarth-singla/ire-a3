@@ -1,7 +1,8 @@
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lllrrrrr}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{llp{4.2cm}rrrrr}
 \toprule
 Dataset & Index & Config @0.95 & Build time s (threads) & Train s & Size MB & Bytes/vector & Raw float32 bytes/vector \\
 \midrule
@@ -13,6 +14,7 @@ glove & IVF-Flat & nlist=4096, nprobe=512 & 18.1 (20 thr) & 12.4 & 462.1 & 409.4
 glove & IVF-PQ & not reached (max recall 0.863): nlist=1024, m=50, nprobe=512 & 35.4 (20 thr) & 29.2 & 66.0 & 58.4 & 400 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \caption{Build cost and memory of the config chosen at recall 0.95 (or the highest-recall config if 0.95 is not reached). Size = serialised index. Configs are chosen on the tune queries (recall $\geq$ target); test recall is reported as measured and may fall slightly below the target.}
 \label{tab:part2_cost}
 \end{table}

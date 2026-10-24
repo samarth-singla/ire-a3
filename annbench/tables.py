@@ -15,7 +15,10 @@ _LATEX_SPECIAL = {"\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$",
 def latex_escape(text) -> str:
     s = str(text)
     out = "".join(_LATEX_SPECIAL.get(ch, ch) for ch in s)
-    return out.replace("×", r"$\times$").replace("≥", r"$\geq$").replace("≤", r"$\leq$")
+    for ch, tex in (("×", r"$\times$"), ("≥", r"$\geq$"), ("≤", r"$\leq$"), ("÷", r"$\div$"),
+                    ("–", "--"), ("—", "---"), ("·", r"$\cdot$"), ("µ", r"$\mu$")):
+        out = out.replace(ch, tex)
+    return out
 
 
 def write_table(headers: list[str], rows: list[list], out_base: Path, caption: str,
@@ -32,11 +35,14 @@ def write_table(headers: list[str], rows: list[list], out_base: Path, caption: s
     md_path.write_text("\n".join(md), encoding="utf-8")
 
     align = align or ("l" * len(headers))
+    # adjustbox shrinks a table to the text width only if it is wider (needs \usepackage{adjustbox})
     tex = [r"\begin{table}[t]", r"\centering", r"\small",
+           r"\begin{adjustbox}{max width=\linewidth}",
            rf"\begin{{tabular}}{{{align}}}", r"\toprule",
            " & ".join(latex_escape(h) for h in headers) + r" \\", r"\midrule"]
     tex += [" & ".join(latex_escape(c) for c in r) + r" \\" for r in cells]
-    tex += [r"\bottomrule", r"\end{tabular}", rf"\caption{{{latex_escape(caption)}}}",
+    tex += [r"\bottomrule", r"\end{tabular}", r"\end{adjustbox}",
+            rf"\caption{{{latex_escape(caption)}}}",
             rf"\label{{{label}}}", r"\end{table}", ""]
     tex_path = out_base.with_suffix(".tex")
     tex_path.write_text("\n".join(tex), encoding="utf-8")

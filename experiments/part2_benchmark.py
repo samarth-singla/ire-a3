@@ -285,14 +285,27 @@ def make_outputs(cfg: dict) -> None:
                 notes.append(f"- **{name} / {FAMILY_LABEL[fam]}** does not reach 0.95 on the tune "
                              f"queries: max tune recall {op['max_tune_recall']:.4f} at "
                              f"{op['config']} (test recall {op['test_recall']:.4f}). {why}")
-        # canary drift across the run
-        can = [json.loads(e).get("canary_qps") for e in d["extra"]]
-        can = np.array([c for c in can if c is not None], dtype=float)
-        if len(can):
-            notes.append(f"- Noise canary ({name}): exact {config.CANARY_NQ}-query search QPS "
-                         f"min {can.min():,.0f}, median {np.median(can):,.0f}, max {can.max():,.0f} "
-                         f"(spread {(can.max() - can.min()) / np.median(can):.1%}) over "
-                         f"{d['build_params'].nunique()} build configs.")
+        # tune vs test recall at the same config (how much selecting on tune can be off on test)
+        key = ["index", "build_params", "search_param"]
+        tt = d[d["split"] == "tune"].merge(d[d["split"] == "test"], on=key, suffixes=("_tu", "_te"))
+        if len(tt):
+            gap = (tt["recall_at_10_te"] - tt["recall_at_10_tu"]).abs()
+            notes.append(f"- Tune vs test recall ({name}, {len(tt)} configs): |test - tune| median "
+                         f"{gap.median():.4f}, max {gap.max():.4f}.")
+        # canary drift: one canary per build config's sweep; grouped by run (git commit of the
+        # rows), then over all rows. spread = (max - min) / median
+        cd = d.assign(canary=d["extra"].map(lambda e: json.loads(e).get("canary_qps")))
+        cd = cd.dropna(subset=["canary"]).drop_duplicates(["git_commit", "build_params", "canary"])
+        groups = [(f"run at commit {c}", g) for c, g in cd.groupby("git_commit")]
+        if len(groups) > 1:
+            groups.append(("all runs", cd))
+        for label, g in groups:
+            can = g["canary"].to_numpy(dtype=float)
+            notes.append(f"- Noise canary ({name}, {label}, {len(can)} sweeps, "
+                         f"{str(g['timestamp'].min())[:16]} to {str(g['timestamp'].max())[:16]} UTC): "
+                         f"exact {config.CANARY_NQ}-query search QPS min {can.min():,.0f}, median "
+                         f"{np.median(can):,.0f}, max {can.max():,.0f} (spread "
+                         f"{(can.max() - can.min()) / np.median(can):.1%}).")
 
     if not qps_rows:
         print("[part2] no Part 2 rows to report")
@@ -306,14 +319,14 @@ def make_outputs(cfg: dict) -> None:
         "Single-thread, one-query-at-a-time QPS on the test queries (median of 3 runs) at "
         "recall@10 0.90 and 0.95." + below + " 'not reached': no config reached the target on the "
         "tune queries; the highest-recall config is shown with its test recall." + quick_note,
-        "tab:part2_qps", align="llrrlrrlr")
+        "tab:part2_qps", align="llrrp{2.6cm}rrp{2.6cm}r")
     written += tables.write_table(
         ["Dataset", "Index", "Config @0.95", "Build time s (threads)", "Train s", "Size MB",
          "Bytes/vector", "Raw float32 bytes/vector"],
         cost_rows, out_dir / "tables" / "part2_cost",
         "Build cost and memory of the config chosen at recall 0.95 (or the highest-recall config "
         "if 0.95 is not reached). Size = serialised index." + below + quick_note,
-        "tab:part2_cost", align="lllrrrrr")
+        "tab:part2_cost", align="llp{4.2cm}rrrrr")
     notes_path = out_dir / "part2_notes.md"
     notes_path.write_text("# Part 2 notes (DRAFT - Samarth to check and rewrite)\n\n"
                           + ("\n".join(notes) if notes else "All indexes reach 0.95.") + "\n",
