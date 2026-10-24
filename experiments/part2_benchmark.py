@@ -57,9 +57,16 @@ def build_grid(cfg: dict, family: str, dataset: str) -> list[dict]:
     return [dict(zip(keys, vals)) for vals in itertools.product(*(b[k] for k in keys))]
 
 
-def sweep_values(cfg: dict, family: str, params: dict) -> tuple[list[int], list[int]]:
-    """(values to run, values skipped because nprobe > nlist)."""
+def sweep_values(cfg: dict, family: str, params: dict,
+                 dataset: str | None = None) -> tuple[list[int], list[int]]:
+    """(values to run, values skipped because nprobe > nlist).
+
+    Includes ``cfg["SWEEP_EXTEND"]`` values for this (dataset, family, build params)."""
     vals = list(cfg["GRIDS"][family]["sweep"])
+    for ext in cfg.get("SWEEP_EXTEND", []):
+        if (ext["dataset"] == dataset and ext["family"] == family
+                and all(params.get(k) == v for k, v in ext["params"].items())):
+            vals = sorted(set(vals) | set(ext["values"]))
     if family in ("ivfflat", "ivfpq"):
         return [v for v in vals if v <= params["nlist"]], [v for v in vals if v > params["nlist"]]
     return vals, []
@@ -126,7 +133,7 @@ def run_benchmark(cfg: dict, datasets, families, rebuild: bool, fresh: bool) -> 
 
         for fam in families:
             for params in build_grid(cfg, fam, name):
-                values, skipped = sweep_values(cfg, fam, params)
+                values, skipped = sweep_values(cfg, fam, params, name)
                 tag = frontier.describe_config(fam, params, None)
                 for v in values:
                     for split, q, _ in splits:
@@ -419,7 +426,7 @@ def estimate(cfg: dict, datasets, families) -> None:
                         else [per_m.values[0] / per_m.index[0], 0.0])
 
             for params in build_grid(cfg, fam, name):
-                values, _ = sweep_values(cfg, fam, params)
+                values, _ = sweep_values(cfg, fam, params, name)
                 if fam == "hnsw":
                     M = params["M"]
                     qM = sorted(builds["bp"].map(lambda b: b["M"]))

@@ -77,10 +77,11 @@ def recall_qps_plot(df: pd.DataFrame, families, out_base: Path, title: str,
 
     if exact_qps is not None:
         ax.axhline(exact_qps, color=INK2, linewidth=1.2, linestyle=(0, (4, 2)), zorder=1)
-        ax.scatter([1.0], [exact_qps], s=36, color=INK2, marker="*", zorder=4,
-                   label="Exact (1 thread)")
-        ax.annotate(f"Exact: {exact_qps:,.0f} QPS", (xmin, exact_qps), xytext=(2, 4),
-                    textcoords="offset points", fontsize=8, color=INK2)
+        # direct label just above the line, right of centre (the legend sits at the left)
+        ax.scatter([1.0], [exact_qps], s=36, color=INK2, marker="*", zorder=4)
+        ax.annotate(f"Exact search, 1 thread: {exact_qps:,.0f} QPS", (0.5, exact_qps),
+                    xycoords=("axes fraction", "data"), xytext=(0, 4),
+                    textcoords="offset points", fontsize=8, color=INK2, ha="center")
     else:
         ax.text(0.01, 0.01, "exact baseline not available for this run",
                 transform=ax.transAxes, fontsize=7, color=MUTED)
@@ -95,7 +96,7 @@ def recall_qps_plot(df: pd.DataFrame, families, out_base: Path, title: str,
     ax.set_xlabel("Recall@10 (test queries)", fontsize=9, color=INK)
     ax.set_ylabel("Queries per second (1 thread, log scale)", fontsize=9, color=INK)
     ax.set_title(title, fontsize=10, color=INK, loc="left")
-    leg = ax.legend(fontsize=8, frameon=False, loc="lower left")
+    leg = ax.legend(fontsize=8, frameon=False, loc="center left")
     for text in leg.get_texts():
         text.set_color(INK)
     return save(fig, out_base)

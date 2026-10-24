@@ -1,0 +1,10 @@
+| Dataset | Index | Config @0.95 | Build time s (threads) | Train s | Size MB | Bytes/vector | Raw float32 bytes/vector |
+|---|---|---|---|---|---|---|---|
+| sift | HNSW | M=16, efSearch=64 | 60.8 (20 thr) | 0.0 | 625.9 | 656.3 | 512 |
+| sift | IVF-Flat | nlist=4096, nprobe=64 | 18.9 (20 thr) | 13.5 | 497.9 | 522.1 | 512 |
+| sift | IVF-PQ | not reached (max recall 0.885): nlist=4096, m=64, nprobe=512 | 62.3 (20 thr) | 51.7 | 70.8 | 74.3 | 512 |
+| glove | HNSW | M=32, efSearch=384 | 149.2 (20 thr) | 0.0 | 758.6 | 672.2 | 400 |
+| glove | IVF-Flat | nlist=4096, nprobe=512 | 18.1 (20 thr) | 12.4 | 462.1 | 409.4 | 400 |
+| glove | IVF-PQ | not reached (max recall 0.863): nlist=1024, m=50, nprobe=512 | 35.4 (20 thr) | 29.2 | 66.0 | 58.4 | 400 |
+
+Build cost and memory of the config chosen at recall 0.95 (or the highest-recall config if 0.95 is not reached). Size = serialised index. Configs are chosen on the tune queries (recall ≥ target); test recall is reported as measured and may fall slightly below the target.

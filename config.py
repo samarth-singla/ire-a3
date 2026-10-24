@@ -90,6 +90,13 @@ GRIDS = {
     },
 }
 
+# Extra sweep values for single build configs whose sweep never reached recall 0.95 in the full
+# run (implementation.md Section 3: extend the sweep rather than accept it). Full mode only.
+SWEEP_EXTEND = [
+    {"dataset": "glove", "family": "hnsw", "params": {"M": 16}, "values": [768, 1024]},
+    {"dataset": "glove", "family": "ivfflat", "params": {"nlist": 8192}, "values": [1024]},
+]
+
 # ---------------------------------------------------------------- Part 3 (compression)
 PART3 = {
     "dataset": "sift",
@@ -135,6 +142,7 @@ QUICK = {
     },
     "PART3": {"n_base": 100_000, "nlist": 1024, "m": [8, 16, 32],
               "sweep": [1, 4, 16, 64, 256]},
+    "SWEEP_EXTEND": [],
     "PART4": {"n_base": 40_000, "n_added": 40_000, "shifts": [0.0, 0.25, 0.5, 1.0],
               "nprobe_sweep": [1, 4, 16, 64, 256], "ef_sweep": [16, 32, 64, 128, 256]},
 }
@@ -161,7 +169,7 @@ def get_config(quick: bool = False) -> dict:
         "AGREE_N": AGREE_N,
         "REPEATS": REPEATS, "WARMUP": WARMUP, "PIN_CPU": PIN_CPU,
         "RESULTS_DIR": RESULTS_DIR,
-        "GRIDS": GRIDS, "PART3": PART3, "PART4": PART4,
+        "GRIDS": GRIDS, "SWEEP_EXTEND": SWEEP_EXTEND, "PART3": PART3, "PART4": PART4,
     }
     if quick:
         cfg = _merge(cfg, QUICK)
