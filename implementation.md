@@ -281,7 +281,7 @@ Procedure is the same strict order as Part 3:
 ### Step 10 — Question 4 helper (`experiments/q4_projection.py`)
 
 Using measured numbers from `results.csv`:
-- **Measure exact search at 150K** (do not project it): for each dataset, take the first 150,000 base vectors, build `IndexFlatL2`, and time single-thread one-query-at-a-time search on the test queries with the Step 4 protocol (same query count as Part 1's `EXACT_SINGLE_N`; quick mode uses the quick test-query count). Store these as `part=q4` rows in `results.csv` (`experiment_tag = "q4_exact_150k"`), replacing earlier `part=q4` rows.
+- **Measure exact search at 150K** (do not project it): for each dataset, take the first 150,000 base vectors, build `IndexFlatL2`, and time single-thread one-query-at-a-time search on the test queries with the Step 4 protocol (same query count as Part 1's `EXACT_SINGLE_N`; quick mode uses the quick test-query count). Store these as `part=10` rows in `results.csv` (`experiment_tag = "q4_exact_150k"`), replacing earlier `part=10` rows.
 - Exact single-query latency at **10M** is a projection: scale the measured 1M latency linearly in n (cross-check the linear model against the measured 150K and 1M points).
 - Memory for 10M: raw float32 = 10M × 4d bytes (SIFT 5.12 GB, GloVe 4.0 GB); HNSW adds ≈ 2·M·4 bytes/vector of links plus overhead (use measured bytes/vector from Part 2); IVF-Flat ≈ raw + ids; IVF-PQ ≈ m + 8 bytes/vector.
 - **Recommended index and settings per scenario** (150K and 10M, for each dataset; budget 100 ms/query, 16 GB RAM), chosen from the measured results by a fixed rule: among exact search and the Part 2 (and Part 3 re-rank) operating points at recall 0.95, keep those whose latency (measured at 150K / 1M, projected at 10M) fits in 100 ms and whose memory (measured or projected) fits in 16 GB with headroom for the OS; recommend the fastest of these, and say whether exact search alone already fits. Print the rule and the candidates considered. This is a draft for Samarth; the reasoning in the report is his.
@@ -376,7 +376,7 @@ If any index does not reach ≥ 0.95 recall with these grids (other than IVF-PQ)
 
 `git_commit` = output of `git rev-parse --short HEAD` (read-only) plus `-dirty` if the tree has uncommitted changes.
 
-**Row replacement.** `results.csv` is never deleted. Each script owns the rows with its `part` value (`1`, `2`, `3`, `4`, `q4`). It collects its rows in memory and, at the end, rewrites the file with all other parts' rows unchanged and its own old rows replaced by the new ones (write to a temp file, then rename, so a crashed run leaves the old rows in place). Quick mode does the same in `results_quick/results.csv`.
+**Row replacement.** `results.csv` is never deleted. Each script owns the rows with its `part` value (`1`, `2`, `3`, `4`, `10`). It collects its rows in memory and, at the end, rewrites the file with all other parts' rows unchanged and its own old rows replaced by the new ones (write to a temp file, then rename, so a crashed run leaves the old rows in place). Quick mode does the same in `results_quick/results.csv`.
 
 ---
 

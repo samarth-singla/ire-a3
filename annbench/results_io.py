@@ -1,7 +1,7 @@
 """results.csv with a fixed schema (implementation.md, Section 4).
 
 One row per timed run. ``results.csv`` is never deleted: each experiment script owns the rows
-with its ``part`` value ("1", "2", "3", "4", "q4"), collects its rows in memory, and at the end
+with its ``part`` value ("1", "2", "3", "4", "10"), collects its rows in memory, and at the end
 calls ``replace_part_rows``, which rewrites the file with every other part's rows unchanged and
 its own old rows replaced (temp file + rename, so a crashed run leaves the old rows in place).
 
@@ -32,7 +32,7 @@ SCHEMA = [
     "git_commit",
 ]
 JSON_COLUMNS = {"build_params", "qps_runs", "extra"}
-PARTS = {"1", "2", "3", "4", "q4"}
+PARTS = {"1", "2", "3", "4", "10"}   # 10 = Step 10 (report question 4)
 
 _GIT_COMMIT: str | None = None
 
