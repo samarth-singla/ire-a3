@@ -1,0 +1,12 @@
+| m | Variant | Max recall@10 | QPS @0.90 (recall, nprobe) | QPS @0.95 (recall, nprobe) | Bytes/vector in RAM | PQ part bytes/vector | PQ code bytes |
+|---|---|---|---|---|---|---|---|
+| 8 | plain IVF-PQ | 0.412 | not reached | not reached | 18.3 | 18.3 | 8 |
+| 8 | IVF-PQ + re-rank top 100 | 0.885 | not reached | not reached | 530.3 | 18.3 | 8 |
+| 16 | plain IVF-PQ | 0.590 | not reached | not reached | 26.3 | 26.3 | 16 |
+| 16 | IVF-PQ + re-rank top 100 | 0.985 | 4,508 (0.921, nprobe=32) | 2,917 (0.963, nprobe=64) | 538.3 | 26.3 | 16 |
+| 32 | plain IVF-PQ | 0.745 | not reached | not reached | 42.3 | 42.3 | 32 |
+| 32 | IVF-PQ + re-rank top 100 | 1.000 | 3,014 (0.927, nprobe=32) | 1,841 (0.973, nprobe=64) | 554.3 | 42.3 | 32 |
+| 64 | plain IVF-PQ | 0.885 | not reached | not reached | 74.3 | 74.3 | 64 |
+| 64 | IVF-PQ + re-rank top 100 | 1.000 | 1,875 (0.927, nprobe=32) | 1,067 (0.973, nprobe=64) | 586.3 | 74.3 | 64 |
+
+PQ compression on SIFT (nlist 4096, 8-bit codes): plain IVF-PQ vs the same index with exact re-ranking of the top 100 candidates. Single-thread QPS on the test queries (median of 3 runs). Max recall: test recall of the config with the highest tune recall. Configs are chosen on the tune queries (recall ≥ target); test recall is reported as measured and may fall slightly below the target. 'Bytes/vector in RAM' for re-rank includes the raw float32 vectors; 'PQ part' is the IVF-PQ index alone.
