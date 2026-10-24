@@ -1,0 +1,20 @@
+| Shift | Index | Variant | QPS @0.95 | Test recall | Setting | Dist. comps / query | IVF lists: CV / max÷mean / added in top 1% | Time s |
+|---|---|---|---|---|---|---|---|---|
+| 0 | IVF-Flat | stale | 2,357 | 0.966 | nprobe=32 | 14,087 | 0.44 / 3.1 / 3% | build 1.4, insert 0.3 |
+| 0 | IVF-Flat | rebuilt | 2,393 | 0.968 | nprobe=32 | 14,013 | 0.43 / 4.0 / 2% | build 1.9 |
+| 0 | HNSW | stale | 9,272 | 0.952 | efSearch=32 | 985 | - | build 7.1, insert 10.8 |
+| 0 | HNSW | rebuilt | 9,176 | 0.951 | efSearch=32 | 986 | - | build 19.2 |
+| 0.25 | IVF-Flat | stale | 2,315 | 0.959 | nprobe=32 | 14,542 | 0.47 / 3.5 / 3% | build 1.6, insert 0.3 |
+| 0.25 | IVF-Flat | rebuilt | 2,394 | 0.962 | nprobe=32 | 13,947 | 0.40 / 3.2 / 2% | build 1.9 |
+| 0.25 | HNSW | stale | 6,907 | 0.971 | efSearch=48 | 1,289 | - | build 7.2, insert 10.7 |
+| 0.25 | HNSW | rebuilt | 6,657 | 0.975 | efSearch=48 | 1,337 | - | build 19.9 |
+| 0.5 | IVF-Flat | stale | 2,173 | 0.954 | nprobe=32 | 15,467 | 0.54 / 4.8 / 4% | build 1.6, insert 0.3 |
+| 0.5 | IVF-Flat | rebuilt | 2,642 | 0.975 | nprobe=32 | 12,997 | 0.41 / 3.3 / 2% | build 1.9 |
+| 0.5 | HNSW | stale | 9,935 | 0.953 | efSearch=32 | 931 | - | build 7.2, insert 8.6 |
+| 0.5 | HNSW | rebuilt | 9,808 | 0.954 | efSearch=32 | 939 | - | build 17.8 |
+| 1 | IVF-Flat | stale | 1,800 | 0.965 | nprobe=32 | 18,842 | 0.76 / 8.6 / 9% | build 1.6, insert 0.3 |
+| 1 | IVF-Flat | rebuilt | 2,734 | 0.979 | nprobe=32 | 12,693 | 0.41 / 3.3 / 1% | build 1.9 |
+| 1 | HNSW | stale | 10,085 | 0.956 | efSearch=32 | 914 | - | build 7.2, insert 7.3 |
+| 1 | HNSW | rebuilt | 10,187 | 0.954 | efSearch=32 | 914 | - | build 16.9 |
+
+Drift experiment: 200,000 SIFT base vectors plus 200,000 added vectors and the queries shifted by shift × R along a fixed random direction. Stale = trained/built on the base, then extended; rebuilt = built on base + added. Single-thread QPS on the test queries at the config chosen on the tune queries for recall ≥ 0.95 (test recall reported as measured; 'not reached': highest-recall config shown). Distance computations per query exclude the IVF coarse quantizer (nlist per query).
