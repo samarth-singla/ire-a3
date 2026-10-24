@@ -104,8 +104,6 @@ def get_ground_truth(name: str, n_base: int | None, k: int = config.GT_K, *,
     Pass ``xb``/``xq`` from ``load_dataset`` to avoid reloading the file.
     Returns ``(ids int64 [nq, k], dist float64 [nq, k])``.
     """
-    import faiss
-
     if xb is None or xq is None:
         xb, xq, *_ = load_dataset(name, n_base, verbose=verbose)
     n = xb.shape[0]
@@ -122,28 +120,51 @@ def get_ground_truth(name: str, n_base: int | None, k: int = config.GT_K, *,
         if verbose:
             print(f"[gt] cache {path.name} does not match (k/n_base/nq); recomputing")
 
-    nq = xq.shape[0]
+    ids, dist, dist_faiss = compute_ground_truth(xb, xq, k, batch_size=batch_size,
+                                                 verbose=verbose, label=name)
+
+    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.stem + ".tmp.npz")
+    np.savez(tmp, ids=ids, dist=dist, dist_faiss=dist_faiss, k=k, n_base=n)
+    os.replace(tmp, path)
+    if verbose:
+        print(f"[gt] saved {path}")
+    return ids, dist
+
+
+def compute_ground_truth(xb: np.ndarray, xq: np.ndarray, k: int = config.GT_K, *,
+                         batch_size: int = 1000, verbose: bool = True, label: str = ""):
+    """Exact top-k for arbitrary arrays (no caching): FAISS ``IndexFlatL2`` with all threads
+    (OpenMP and BLAS; not timed), then distances recomputed in float64 and rows re-sorted by
+    (distance, id). Returns ``(ids int64, dist float64, dist_faiss float32)``."""
+    import faiss
+    from threadpoolctl import threadpool_limits
+
+    n, nq = xb.shape[0], xq.shape[0]
+    k = min(k, n)
     prev_threads = faiss.omp_get_max_threads()
     threads = os.cpu_count() or 1
     faiss.omp_set_num_threads(threads)
     try:
-        index = faiss.IndexFlatL2(xb.shape[1])
-        index.add(xb)
-        ids = np.empty((nq, k), dtype=np.int64)
-        dist_faiss = np.empty((nq, k), dtype=np.float32)
-        t0 = time.perf_counter()
-        if verbose:
-            print(f"[gt] {name}: exact top-{k} for {nq} queries over {n} vectors "
-                  f"({threads} threads, batches of {batch_size})")
-        for start in range(0, nq, batch_size):
-            stop = min(start + batch_size, nq)
-            dist_faiss[start:stop], ids[start:stop] = index.search(xq[start:stop], k)
+        with threadpool_limits(limits=threads):
+            index = faiss.IndexFlatL2(xb.shape[1])
+            index.add(np.ascontiguousarray(xb, dtype=np.float32))
+            ids = np.empty((nq, k), dtype=np.int64)
+            dist_faiss = np.empty((nq, k), dtype=np.float32)
+            t0 = time.perf_counter()
             if verbose:
-                el = time.perf_counter() - t0
-                eta = el / stop * (nq - stop)
-                print(f"[gt]   {stop:>6}/{nq} queries  {el:6.1f}s elapsed  ~{eta:5.1f}s left",
-                      flush=True)
-        del index
+                print(f"[gt] {label}: exact top-{k} for {nq} queries over {n} vectors "
+                      f"({threads} threads, batches of {batch_size})")
+            for start in range(0, nq, batch_size):
+                stop = min(start + batch_size, nq)
+                dist_faiss[start:stop], ids[start:stop] = index.search(
+                    np.ascontiguousarray(xq[start:stop], dtype=np.float32), k)
+                if verbose:
+                    el = time.perf_counter() - t0
+                    eta = el / stop * (nq - stop)
+                    print(f"[gt]   {stop:>6}/{nq} queries  {el:6.1f}s elapsed  ~{eta:5.1f}s left",
+                          flush=True)
+            del index
     finally:
         faiss.omp_set_num_threads(prev_threads)
 
@@ -152,14 +173,9 @@ def get_ground_truth(name: str, n_base: int | None, k: int = config.GT_K, *,
     ids = np.take_along_axis(ids, order, axis=1)
     dist = np.take_along_axis(dist, order, axis=1)
     dist_faiss = np.take_along_axis(dist_faiss, order, axis=1)
-
-    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.stem + ".tmp.npz")
-    np.savez(tmp, ids=ids, dist=dist, dist_faiss=dist_faiss, k=k, n_base=n)
-    os.replace(tmp, path)
     if verbose:
-        print(f"[gt] done in {time.perf_counter() - t0:.1f}s -> {path}")
-    return ids, dist
+        print(f"[gt] done in {time.perf_counter() - t0:.1f}s")
+    return ids, dist, dist_faiss
 
 
 # Squared L2 in float64 from the vectors; same function recall@10 uses, so ground-truth and
