@@ -72,7 +72,32 @@ def collect() -> dict:
         info["faiss_max_threads"] = faiss.omp_get_max_threads()
     except Exception:
         info["faiss_max_threads"] = None
+    info.update(blas_info())
     return info
+
+
+def blas_info() -> dict:
+    """BLAS / OpenMP libraries actually loaded by numpy + FAISS (threadpoolctl), plus the conda
+    libblas build string when running under conda."""
+    out = {"blas": None, "blas_libraries": [], "conda_libblas": None}
+    try:
+        import faiss  # noqa: F401  (load FAISS's libraries too)
+        from threadpoolctl import threadpool_info
+        libs = [{k: lib.get(k) for k in ("user_api", "internal_api", "version",
+                                          "threading_layer", "num_threads", "filepath")}
+                for lib in threadpool_info()]
+        out["blas_libraries"] = libs
+        blas = [lib for lib in libs if lib["user_api"] == "blas"]
+        out["blas"] = ", ".join(f"{b['internal_api']} {b['version']}"
+                                + (f" ({b['threading_layer']})" if b["threading_layer"] else "")
+                                for b in blas) or None
+    except Exception as e:                       # threadpoolctl missing or failed
+        out["blas"] = f"unknown ({e.__class__.__name__})"
+    meta = Path(sys.prefix) / "conda-meta"
+    if meta.is_dir():
+        hits = sorted(p.stem for p in meta.glob("libblas-*.json"))
+        out["conda_libblas"] = hits[0] if hits else None
+    return out
 
 
 def main() -> None:

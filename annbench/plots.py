@@ -40,8 +40,10 @@ def save(fig, out_base: Path) -> list[Path]:
     out_base = Path(out_base)
     out_base.parent.mkdir(parents=True, exist_ok=True)
     paths = [out_base.with_suffix(".png"), out_base.with_suffix(".pdf")]
-    fig.savefig(paths[0], dpi=200, bbox_inches="tight")
-    fig.savefig(paths[1], bbox_inches="tight")
+    # no creation timestamp in the files, so regenerating from the same results.csv gives
+    # byte-identical figures (clean git diffs)
+    fig.savefig(paths[0], dpi=200, bbox_inches="tight", metadata={"Software": None})
+    fig.savefig(paths[1], bbox_inches="tight", metadata={"CreationDate": None})
     plt.close(fig)
     return paths
 

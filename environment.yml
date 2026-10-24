@@ -1,7 +1,7 @@
 # Conda environment used for the report (recommended on Windows; also works on Linux/macOS).
 #   conda env create -f environment.yml
 #   conda activate ire-a3
-# Same pins as requirements.txt. hnswlib is optional and not installed (HNSW uses faiss.IndexHNSWFlat).
+# Same pins as requirements.txt, plus the BLAS pin (pip wheels already ship OpenBLAS). hnswlib is optional and not installed (HNSW uses faiss.IndexHNSWFlat).
 name: ire-a3
 channels:
   - conda-forge
@@ -16,3 +16,5 @@ dependencies:
   - psutil=7.2.2
   - pypdf=6.21.2
   - threadpoolctl=3.7.0
+  # BLAS: OpenBLAS (MKL 2026.2 + llvm-openmp 23.1.4 crashed on large matrix products here)
+  - libblas=*=*openblas

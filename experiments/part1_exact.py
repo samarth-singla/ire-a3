@@ -128,8 +128,13 @@ def main() -> None:
         print(f"\n================ {name}")
         # ---- 1. agreement check (always full-size data)
         xb_full, xq, file_ids, file_dist, note = data.load_dataset(name)
-        gt_full_ids, _ = data.get_ground_truth(name, None, xb=xb_full, xq=xq)
         n_check = min(n_agree or xq.shape[0], xq.shape[0])
+        if n_check < xq.shape[0] and not data.gt_cache_path(name, xb_full.shape[0]).exists():
+            # quick mode, cold cache: exact top-k for the checked queries only (same method)
+            gt_full_ids, _, _ = data.compute_ground_truth(xb_full, xq[:n_check], K,
+                                                          label=f"{name} (agreement subset)")
+        else:
+            gt_full_ids, _ = data.get_ground_truth(name, None, xb=xb_full, xq=xq)
         t0 = time.perf_counter()
         agr = agreement_check(name, xb_full, xq, file_ids, file_dist, gt_full_ids, n_check, K)
         agr["metric_note"] = note

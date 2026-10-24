@@ -6,12 +6,14 @@ full mode or quick mode (``--quick``); quick mode overrides the values listed in
 from __future__ import annotations
 
 import copy
+import os
 from pathlib import Path
 
 # ---------------------------------------------------------------- paths
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
-CACHE_DIR = ROOT / "cache"
+# indexes + ground truth (gitignored); ANNBENCH_CACHE_DIR overrides it, e.g. to time a cold run
+CACHE_DIR = Path(os.environ.get("ANNBENCH_CACHE_DIR", ROOT / "cache"))
 RESULTS_DIR = ROOT / "results"            # full mode
 RESULTS_QUICK_DIR = ROOT / "results_quick"  # quick mode never overwrites full results
 
