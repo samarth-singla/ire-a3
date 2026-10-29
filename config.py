@@ -35,6 +35,7 @@ RECALL_ABS_EPS = 1e-6        # tie tolerance on squared L2 (absolute)
 TUNE = slice(0, 5000)
 TEST = slice(5000, 10000)
 TUNE_N = 2000                # Part 2 full mode: only the first TUNE_N tune queries are timed
+TEST_N: int | None = None    # Parts 2-3: cap on timed test queries (None = whole test split)
 EXACT_SINGLE_N = 1000        # Part 1: exact one-at-a-time timing uses the first N test queries
 AGREE_N: int | None = None   # Part 1 agreement check: None = all 10,000 queries (always full-size data)
 
@@ -128,25 +129,31 @@ QUICK = {
     "N_BASE": 100_000,
     "TUNE": slice(0, 1000),
     "TEST": slice(5000, 6000),
-    "TUNE_N": 1000,
-    "EXACT_SINGLE_N": 1000,
+    # Quick grids are cut for runtime (cold cache, plugged in: target < 8 min); the method is the
+    # same as full mode. Parts 2-3 time 500 tune + 500 test queries; Part 1's batch and agreement
+    # check keep the 1,000-query test split.
+    "TUNE_N": 500,
+    "TEST_N": 500,
+    "EXACT_SINGLE_N": 300,
     "AGREE_N": 1000,           # 500 if quick mode would exceed 15 min
     "REPEATS": 3,
     "RESULTS_DIR": RESULTS_QUICK_DIR,
     "GRIDS": {
         "hnsw": {"build": {"M": [16, 32], "efConstruction": [HNSW_EF_CONSTRUCTION]},
                  "sweep": [16, 32, 64, 128, 256]},
-        "ivfflat": {"build": {"nlist": [256, 1024]},
+        "ivfflat": {"build": {"nlist": [1024]},
                     "sweep": [1, 4, 16, 64, 256]},
-        "ivfpq": {"build": {"sift": {"nlist": [1024], "m": [16, 32], "nbits": [PQ_NBITS]},
-                            "glove": {"nlist": [1024], "m": [20, 50], "nbits": [PQ_NBITS]}},
-                  "sweep": [1, 4, 16, 64, 256]},
+        # nlist 256: PQ trains on 16,384 vectors instead of 65,536 (the slowest quick step)
+        "ivfpq": {"build": {"sift": {"nlist": [256], "m": [16, 32], "nbits": [PQ_NBITS]},
+                            "glove": {"nlist": [256], "m": [20, 50], "nbits": [PQ_NBITS]}},
+                  "sweep": [1, 4, 16, 64]},
     },
-    "PART3": {"n_base": 100_000, "nlist": 1024, "m": [8, 16, 32],
-              "sweep": [1, 4, 16, 64, 256]},
+    "PART3": {"n_base": 100_000, "nlist": 256, "m": [8, 16, 32],   # shares Part 2's IVF-PQ cache
+              "sweep": [1, 4, 16, 64]},
     "SWEEP_EXTEND": [],
-    "PART4": {"n_base": 40_000, "n_added": 40_000, "shifts": [0.0, 0.25, 0.5, 1.0],
-              "nprobe_sweep": [1, 4, 16, 64, 256], "ef_sweep": [16, 32, 64, 128, 256]},
+    "PART4": {"n_base": 40_000, "n_added": 40_000, "n_queries": 1000,
+              "shifts": [0.0, 0.25, 0.5, 1.0],
+              "nprobe_sweep": [1, 4, 16, 64], "ef_sweep": [16, 32, 64, 128]},
 }
 
 
@@ -167,7 +174,7 @@ def get_config(quick: bool = False) -> dict:
         "QUICK": False,
         "N_BASE": None,      # None = all base vectors in the file
         "SEED": SEED, "K": K, "GT_K": GT_K,
-        "TUNE": TUNE, "TEST": TEST, "TUNE_N": TUNE_N, "EXACT_SINGLE_N": EXACT_SINGLE_N,
+        "TUNE": TUNE, "TEST": TEST, "TUNE_N": TUNE_N, "TEST_N": TEST_N, "EXACT_SINGLE_N": EXACT_SINGLE_N,
         "AGREE_N": AGREE_N,
         "REPEATS": REPEATS, "WARMUP": WARMUP, "PIN_CPU": PIN_CPU,
         "RESULTS_DIR": RESULTS_DIR,

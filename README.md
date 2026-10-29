@@ -66,7 +66,7 @@ Windows, check that `which python` points into the `ire-a3` env and not the base
 
 ```bash
 bash run_all.sh            # full mode  -> results/        about 3.5 h on this laptop
-bash run_all.sh --quick    # quick mode -> results_quick/  9 min 02 s measured (cold cache)
+bash run_all.sh --quick    # quick mode -> results_quick/  4 min 13 s measured (cold cache)
 bash run_all.sh --resume   # continue an interrupted full run (add --quick for quick mode)
 ```
 
@@ -78,16 +78,20 @@ bash run_all.sh --resume   # continue an interrupted full run (add --quick for q
 | download | `scripts/download_data.sh` | skipped if present | skipped if present |
 | env | `scripts/env_info.py` | seconds | seconds |
 | tests | `pytest -q` (15 tests) | seconds | seconds |
-| Part 1 | `experiments/part1_exact.py` | ~8 min | 46 s |
-| Part 2 | `experiments/part2_benchmark.py` | ~2.5 h (151.6 min + 5 min GloVe extension) | 4 min 24 s |
-| Part 3 | `experiments/part3_experiment.py` | ~27 min (27.3 min) | 55 s |
-| Part 4 | `experiments/part4_experiment.py` | ~15 min (14.8 min) | 2 min 14 s |
-| Q4 | `experiments/q4_projection.py` | < 1 min | 37 s |
+| Part 1 | `experiments/part1_exact.py` | ~8 min | 1 min 02 s |
+| Part 2 | `experiments/part2_benchmark.py` | ~2.5 h (151.6 min + 5 min GloVe extension) | 1 min 18 s |
+| Part 3 | `experiments/part3_experiment.py` | ~27 min (27.3 min) | 20 s |
+| Part 4 | `experiments/part4_experiment.py` | ~15 min (14.8 min) | 1 min 10 s |
+| Q4 | `experiments/q4_projection.py` | < 1 min | 10 s |
 | tables | `experiments/make_tables.py` | seconds | 3 s |
 
-The quick times were measured with `time bash run_all.sh --quick` on 24 Oct 2026, with an empty cache
-(`ANNBENCH_CACHE_DIR` pointed at a new folder, so every index and ground truth was rebuilt) and the
-data already downloaded. Total: **9 min 02 s**, under the 15-minute limit.
+The quick times were measured with `time bash run_all.sh --quick` on 29 Oct 2026, plugged in, with an
+empty cache (`ANNBENCH_CACHE_DIR` pointed at a new folder, so every index and ground truth was
+rebuilt) and the data already downloaded. Total: **4 min 13 s** (env, tests and download add 10 s),
+leaving headroom under the 15-minute limit on slower machines.
+
+Earlier, larger quick grids took 9 min 02 s plugged in and 16 min 52 s on battery on the same laptop.
+On a laptop, plug in before timing anything.
 
 The first full run also builds and caches every index in `cache/`, which adds a few minutes per
 index (HNSW on 1M vectors takes 1–2.5 min with 20 threads).
@@ -100,13 +104,21 @@ index (HNSW on 1M vectors takes 1–2.5 min with 20 threads).
   - Part 3 uses SIFT 1M. Part 4 uses 200K base + 200K added vectors.
 - **Quick mode** (`--quick`) uses the first 100,000 base vectors, with ground truth recomputed for
   that subset.
-  - It times 1,000 tune and 1,000 test queries, with smaller grids (`QUICK` in `config.py`).
+  - It uses smaller grids (`QUICK` in `config.py`), cut for runtime only; the method is the same:
+    - Parts 2 and 3 time 500 tune and 500 test queries per point (`TUNE_N`, `TEST_N`).
+    - Part 1 times 300 queries one at a time (`EXACT_SINGLE_N`), and its batch uses the
+      1,000-query test split.
+    - HNSW: M ∈ {16, 32}, efSearch ∈ {16, 32, 64, 128, 256}.
+    - IVF-Flat: nlist 1024, nprobe ∈ {1, 4, 16, 64, 256}.
+    - IVF-PQ: nlist 256 (16,384 training vectors), m ∈ {16, 32} on SIFT and {20, 50} on GloVe,
+      nprobe ∈ {1, 4, 16, 64}.
   - It still runs every part:
     - Part 1, including the agreement check on full-size data for the first 1,000 queries;
     - Part 2;
-    - Part 3, with m ∈ {8, 16, 32};
-    - Part 4, with all four shifts on 40K base + 40K added vectors;
-    - the Q4 table.
+    - Part 3, with m ∈ {8, 16, 32} at nlist 256, sharing Part 2's quick IVF-PQ indexes;
+    - Part 4, with all four shifts on 40K base + 40K added vectors and 1,000 queries (500 tune /
+      500 test), nprobe ∈ {1, 4, 16, 64}, efSearch ∈ {16, 32, 64, 128};
+    - the Q4 table, with exact search at 150K timed on 300 queries.
   - Quick mode writes only to `results_quick/` and never touches `results/`.
 - **Re-timing:** by default Parts 2–4 re-time every point (`--fresh`) and replace only their own
   rows in `results.csv`; the file is never deleted. Parts 1 and Q4 always replace their own rows.

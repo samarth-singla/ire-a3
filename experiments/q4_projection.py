@@ -50,9 +50,13 @@ def measure(cfg: dict) -> None:
     rows, blas = [], timing.blas_name()
     for name in DATASETS:
         xb, xq, *_ = data.load_dataset(name, N_SMALL)
-        _, gt = data.get_ground_truth(name, N_SMALL, xb=xb, xq=xq)
         nq = cfg["EXACT_SINGLE_N"]
-        q, g = data.test_queries(xq, cfg)[:nq], gt[cfg["TEST"]][:nq]
+        q = data.test_queries(xq, cfg)[:nq]
+        if cfg["QUICK"] and not data.gt_cache_path(name, N_SMALL).exists():
+            _, g, _ = data.compute_ground_truth(xb, q, cfg["K"], label=f"{name} 150K (timed queries)")
+        else:
+            _, gt = data.get_ground_truth(name, N_SMALL, xb=xb, xq=xq)
+            g = gt[cfg["TEST"]][:nq]
         index = faiss.IndexFlatL2(xb.shape[1])
         index.add(xb)
         canary_index = faiss.IndexFlatL2(xb.shape[1])

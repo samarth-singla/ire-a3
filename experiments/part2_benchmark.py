@@ -123,7 +123,8 @@ def run_benchmark(cfg: dict, datasets, families, rebuild: bool, fresh: bool) -> 
         _, gt = data.get_ground_truth(name, cfg["N_BASE"], xb=xb, xq=xq)
         tune_q = data.tune_queries(xq, cfg)[:cfg["TUNE_N"]]
         tune_gt = gt[cfg["TUNE"]][:cfg["TUNE_N"]]
-        test_q, test_gt = data.test_queries(xq, cfg), gt[cfg["TEST"]]
+        test_q = data.test_queries(xq, cfg)[:cfg.get("TEST_N")]
+        test_gt = gt[cfg["TEST"]][:cfg.get("TEST_N")]
         splits = [("tune", tune_q, tune_gt), ("test", test_q, test_gt)]
         canary_index = faiss.IndexFlatL2(xb.shape[1])
         canary_index.add(np.ascontiguousarray(xb[:config.CANARY_N_BASE]))
@@ -230,7 +231,8 @@ def make_outputs(cfg: dict) -> None:
     df = pd.read_csv(csv_path)
     fams = list(config.PART2_FAMILIES)
     qps_rows, cost_rows, notes, written = [], [], [], []
-    n_tune, n_test = min(cfg["TUNE_N"], len(range(10000)[cfg["TUNE"]])), len(range(10000)[cfg["TEST"]])
+    n_tune = min(cfg["TUNE_N"], len(range(10000)[cfg["TUNE"]]))
+    n_test = min(cfg.get("TEST_N") or 10000, len(range(10000)[cfg["TEST"]]))
     quick_note = (f" Quick mode: first {cfg['N_BASE']:,} base vectors, {n_tune:,} tune / "
                   f"{n_test:,} test queries." if cfg["QUICK"] else "")
     for name in DATASETS:

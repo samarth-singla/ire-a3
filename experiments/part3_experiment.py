@@ -96,7 +96,8 @@ def run(cfg: dict, rebuild: bool, fresh: bool) -> None:
     _, gt = data.get_ground_truth(name, P["n_base"], xb=xb, xq=xq)
     tune_q = data.tune_queries(xq, cfg)[:cfg["TUNE_N"]]
     tune_gt = gt[cfg["TUNE"]][:cfg["TUNE_N"]]
-    test_q, test_gt = data.test_queries(xq, cfg), gt[cfg["TEST"]]
+    test_q = data.test_queries(xq, cfg)[:cfg.get("TEST_N")]
+    test_gt = gt[cfg["TEST"]][:cfg.get("TEST_N")]
     splits = [("tune", tune_q, tune_gt), ("test", test_q, test_gt)]
     canary_index = faiss.IndexFlatL2(d)
     canary_index.add(np.ascontiguousarray(xb[:config.CANARY_N_BASE]))
