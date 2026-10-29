@@ -90,8 +90,17 @@ empty cache (`ANNBENCH_CACHE_DIR` pointed at a new folder, so every index and gr
 rebuilt) and the data already downloaded. Total: **4 min 13 s** (env, tests and download add 10 s),
 leaving headroom under the 15-minute limit on slower machines.
 
-Earlier, larger quick grids took 9 min 02 s plugged in and 16 min 52 s on battery on the same laptop.
-On a laptop, plug in before timing anything.
+**Earlier quick-mode runs** (same laptop, measured before the quick grids were shrunk on 29 Oct;
+those grids timed 1,000 tune + 1,000 test queries per point, used IVF-Flat nlist {256, 1024},
+IVF-PQ nlist 1024, and Part 4 with 2,000 queries and 5-point sweeps):
+
+| Run | Power | Cache | Total |
+|---|---|---|---|
+| 24 Oct 2026, ~12:00 | plugged in | cold (empty `ANNBENCH_CACHE_DIR`) | **9 min 02 s** |
+| 24 Oct 2026, 15:52 | **on battery** (`power_plugged = false` in every row) | warm (`cache/` already held the quick indexes) | **16 min 52 s** |
+
+On battery, the larger grids exceeded the 15-minute limit even with a warm cache. That is why the
+grids were shrunk, and why you should plug in a laptop before timing anything.
 
 The first full run also builds and caches every index in `cache/`, which adds a few minutes per
 index (HNSW on 1M vectors takes 1–2.5 min with 20 threads).
@@ -225,6 +234,18 @@ All timing code is in `annbench/timing.py`.
     reaches it.
   - This also slows the GloVe ground-truth computation, which uses batches of 1,000 queries; the
     results are unaffected.
+  - **Measured at the boundary** (24 Oct 2026): a batch exact search (`IndexFlatL2`) over the first
+    100,000 GloVe vectors, with 1 FAISS thread and 1 BLAS thread, not CPU-pinned, one timed
+    search each:
+
+    | GloVe test queries in the batch | queries × d | QPS |
+    |---|---|---|
+    | 1,279 | 127,900 | 459 |
+    | 1,280 | 128,000 | 2,612 |
+    | 5,000 | 500,000 | 2,712 |
+
+    One more query crosses the threshold and makes the batch 5.7 times faster. This was a one-off
+    check, not part of `run_all.sh`.
 
 ## Where each figure and table comes from
 
