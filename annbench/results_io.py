@@ -168,18 +168,19 @@ def append_row(results_dir: Path, row: dict) -> None:
         os.fsync(f.fileno())
 
 
-def prune_part_rows(results_dir: Path, part, keep) -> int:
+def prune_part_rows(results_dir: Path, part, keep, dedupe: bool = True) -> int:
     """Rewrite results.csv keeping other parts' rows unchanged. Rows of ``part`` are kept only
-    if ``keep(row)`` is true, and duplicates (same ``row_key``) keep the latest. Returns the
-    number of ``part`` rows kept."""
+    if ``keep(row)`` is true. With ``dedupe`` (Parts 2-4, one row per sweep point), duplicates
+    (same ``row_key``) keep the latest. Use ``dedupe=False`` for Part 1, where rows that differ
+    only in ``search_threads`` or ``mode`` share a key. Returns the number of ``part`` rows kept."""
     part = str(part)
     path = Path(results_dir) / "results.csv"
     rows = read_rows(path)
     others = [r for r in rows if r["part"] != part]
     latest: dict[tuple, dict] = {}
-    for r in rows:
+    for i, r in enumerate(rows):
         if r["part"] == part and keep(r):
-            latest[row_key(r)] = r                          # later rows win
+            latest[row_key(r) if dedupe else (i,)] = r       # later rows win
     tmp = path.with_name("results.csv.tmp")
     with tmp.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=SCHEMA)

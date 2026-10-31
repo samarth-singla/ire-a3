@@ -102,17 +102,67 @@ def blas_threads() -> list[tuple]:
     return [(lib["internal_api"], lib["num_threads"]) for lib in timing.blas_info()]
 
 
+THRESHOLD_TAG = "part1_blas_threshold"
+THRESHOLD_N_BASE = 100_000
+
+
+def blas_threshold_check(cfg: dict, blas: str) -> list[dict]:
+    """FAISS (1.14.3) computes a batch of exact distances with BLAS only when
+    n_queries * d >= faiss.cvar.distance_compute_blas_threshold. Time a single-thread batch
+    search on the first 100K GloVe vectors (d = 100) with one query below and exactly at that
+    boundary (1,279 and 1,280 queries for a threshold of 128,000), same protocol as above."""
+    import faiss as _faiss
+    K, R, W = cfg["K"], cfg["REPEATS"], cfg["WARMUP"]
+    thr = int(_faiss.cvar.distance_compute_blas_threshold)
+    xb, xq, *_ = data.load_dataset("glove", THRESHOLD_N_BASE, verbose=False)
+    d = xb.shape[1]
+    _, gt = data.get_ground_truth("glove", THRESHOLD_N_BASE, xb=xb, xq=xq, verbose=False)
+    index = _faiss.IndexFlatL2(d)
+    index.add(xb)
+    start = config.TEST.start                      # test queries 5000, 5001, ...
+    rows = []
+    print(f"\n[blas] FAISS distance_compute_blas_threshold = {thr}; GloVe n={THRESHOLD_N_BASE}, d={d}")
+    for nq in (thr // d - 1, thr // d):
+        q, g = np.ascontiguousarray(xq[start:start + nq]), gt[start:start + nq]
+        with timing.set_single_thread():
+            r = timing.time_batch(index.search, q, K, repeats=R, warmup=W)
+        rec = metrics.recall_at_k(q, xb, r["ids"], g, K)
+        print(f"[blas] batch of {nq} queries (n_queries*d = {nq * d:,}): "
+              f"{r['qps_median']:,.0f} QPS, recall {rec:.4f}")
+        rows.append(results_io.make_row(
+            part=1, dataset="glove", n_base=THRESHOLD_N_BASE, index="exact", mode="batch",
+            split="test", k=K, timing=r, recall_at_10=rec, build_params={"type": "IndexFlatL2"},
+            build_time_s=0.0, train_time_s=0.0, build_threads=1, index_bytes=int(xb.nbytes),
+            bytes_per_vector=4 * d, experiment_tag=THRESHOLD_TAG,
+            extra={"queries_x_d": nq * d, "blas_threshold": thr, "blas": blas,
+                   "power_plugged": timing.power_plugged(),
+                   "query_subset": f"test queries {start}..{start + nq - 1}"}))
+    return rows
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--agree-n", type=int, default=None,
                     help="queries for the agreement check (default: config AGREE_N)")
+    ap.add_argument("--threshold-only", action="store_true",
+                    help="only (re)run the FAISS BLAS-threshold batch check; keep other Part 1 rows")
     args = ap.parse_args()
 
     cfg = config.get_config(args.quick)
     K, out_dir = cfg["K"], cfg["RESULTS_DIR"]
     out_dir.mkdir(parents=True, exist_ok=True)
     n_agree = args.agree_n or cfg["AGREE_N"]
+
+    if args.threshold_only:
+        rows = blas_threshold_check(cfg, timing.blas_name())
+        if (out_dir / "results.csv").exists():
+            results_io.prune_part_rows(out_dir, 1, lambda r: r["experiment_tag"] != THRESHOLD_TAG,
+                                       dedupe=False)
+        for row in rows:
+            results_io.append_row(out_dir, row)
+        print(f"[part1] replaced the {THRESHOLD_TAG} rows in {out_dir / 'results.csv'}")
+        return
 
     blas = timing.blas_name()
     print(f"[part1] mode={'quick' if cfg['QUICK'] else 'full'}  results -> {out_dir}")
@@ -228,6 +278,8 @@ def main() -> None:
               f"{res['single']['recall']:.4f}/{res['batch_1t']['recall']:.4f}/"
               f"{res['batch_all']['recall']:.4f}")
         del index, xb, xb_full       # free ~0.5 GB before the next dataset
+
+    rows += blas_threshold_check(cfg, blas)
 
     # ---- outputs
     (out_dir / "part1_agreement.json").write_text(json.dumps(agreements, indent=2))

@@ -37,7 +37,7 @@ def part1_table(cfg: dict) -> list[Path]:
     if not csv_path.exists():
         return []
     df = pd.read_csv(csv_path)
-    df = df[df["part"].astype(str) == "1"]
+    df = df[(df["part"].astype(str) == "1") & (df["experiment_tag"] == "part1_exact")]
     if df.empty:
         print("[tables] no Part 1 rows")
         return []
@@ -97,7 +97,7 @@ def compact_tables(cfg: dict) -> list[Path]:
     # Part 1: exact search, single vs batch (1 thread), agreement
     agr_path = out / "part1_agreement.json"
     agr = json.loads(agr_path.read_text()) if agr_path.exists() else {}
-    p1 = df[df["part"] == "1"].sort_values("timestamp")
+    p1 = df[(df["part"] == "1") & (df["experiment_tag"] == "part1_exact")].sort_values("timestamp")
     rows = []
     for name in ("sift", "glove"):
         d = p1[p1["dataset"] == name]
@@ -116,7 +116,7 @@ def compact_tables(cfg: dict) -> list[Path]:
             "Exact search, 1 thread: one query per call vs one batch call; agreement with the "
             "file's top-10 sets." + quick, "tab:part1c", align="lrrrrr", **COMPACT)
 
-    # Part 2: merged operating points at recall 0.95
+    # Part 2: QPS at recall 0.90 and 0.95, plus cost at the 0.95 config
     rows = []
     for name in ("sift", "glove"):
         n = part2_benchmark.n_base_of(name, cfg)
@@ -124,24 +124,28 @@ def compact_tables(cfg: dict) -> list[Path]:
         for fam in ("hnsw", "ivfflat", "ivfpq"):
             if d[d["index"] == fam].empty:
                 continue
+            op90 = frontier.operating_point(d, fam, 0.90)
+            q90 = (f"{op90['test_qps']:,.0f} ({short_config(fam, op90['build_params'], op90['search_param'])})"
+                   if op90["reached"] else "not reached")
             op = frontier.operating_point(d, fam, 0.95)
             if op["reached"]:
                 qps, rec = f"{op['test_qps']:,.0f}", f"{op['test_recall']:.3f}"
             else:
                 qps, rec = f"not reached (max recall {op['test_recall']:.3f})", "-"
             r = op["test_row"]
-            rows.append([DS[name], FAM[fam],
+            rows.append([DS[name], FAM[fam], q90,
                          short_config(fam, op["build_params"], op["search_param"]), qps, rec,
                          f"{r['build_time_s']:,.1f}", f"{r['index_bytes'] / 2**20:,.1f}",
                          f"{r['bytes_per_vector']:,.1f}"])
     if rows:
         written += tables.write_table(
-            ["Data", "Index", "Config", "QPS", "Recall", "Build s", "Size MB", "B/vector"], rows,
+            ["Data", "Index", "QPS @0.90 (config)", "Config @0.95", "QPS @0.95", "Recall @0.95",
+             "Build s", "Size MB", "B/vector"], rows,
             out / "tables" / "part2_compact",
-            "Operating points at recall@10 0.95: single-thread test QPS (median of 3), test "
-            "recall, build time (20 threads), index size. Config chosen on tune queries; IVF-PQ "
-            "shows its highest-recall config." + quick, "tab:part2c", align="lllrrrrr",
-            env="table*", **COMPACT)
+            "Single-thread test QPS (median of 3) at recall@10 0.90 and 0.95, and test recall, "
+            "build time (20 threads) and index size at the 0.95 config. Configs chosen on tune "
+            "queries; IVF-PQ shows its highest-recall config." + quick, "tab:part2c",
+            align="llllrrrrr", env="table*", **COMPACT)
 
     # Part 3: re-rank rows + plain max recall
     p3 = part3_experiment.load_rows(cfg)

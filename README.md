@@ -244,8 +244,17 @@ All timing code is in `annbench/timing.py`.
     | 1,280 | 128,000 | 2,612 |
     | 5,000 | 500,000 | 2,712 |
 
-    One more query crosses the threshold and makes the batch 5.7 times faster. This was a one-off
-    check, not part of `run_all.sh`.
+    One more query crosses the threshold and makes the batch 5.7 times faster. That first
+    measurement was a one-off, plugged-in check.
+  - **Now part of the pipeline:** `experiments/part1_exact.py` repeats this check on every run
+    (and `run_all.sh` regenerates it) with the standard protocol. It times 1,279 and 1,280 GloVe
+    test queries in one batch over the first 100K GloVe vectors, on a single pinned thread, with
+    1 warm-up + 3 runs, and writes two `part=1` rows with `experiment_tag = part1_blas_threshold`.
+    The report quotes these rows.
+  - To re-time only this check (seconds) without touching the other Part 1 rows, run:
+    ```bash
+    python experiments/part1_exact.py --threshold-only
+    ```
 
 ## Where each figure and table comes from
 
@@ -290,7 +299,7 @@ value.
 | `search_threads` | 1 for all single-query timing; 20 for the Part 1 all-threads batch |
 | `index_bytes`, `bytes_per_vector` | serialised index size (Part 3 re-rank: including the raw vectors) |
 | `mode` | `single` (one query per call) or `batch` |
-| `experiment_tag` | `part1_exact`, `part2`, `part3_compression`, `part4_drift`, `q4_exact_150k` |
+| `experiment_tag` | `part1_exact`, `part1_blas_threshold` (FAISS batch-threshold check), `part2`, `part3_compression`, `part4_drift`, `q4_exact_150k` |
 | `extra` | JSON: always `pinned_cpu`; also e.g. `canary_qps`, `blas`, `power_plugged`, `train_size`, `pq_part_bytes_per_vector`, `ndis_per_query`, IVF list diagnostics, `insert_time_s` |
 | `timestamp` | UTC time the row was measured |
 | `git_commit` | `git rev-parse --short HEAD`, plus `-dirty` if tracked code (outside `results/`) had uncommitted changes |

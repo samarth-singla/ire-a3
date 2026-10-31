@@ -120,12 +120,9 @@ settings; dashed line: exact search.}
 
 \textbf{Results.} HNSW is the fastest index at 0.95 on both datasets: 155$\times$ exact search on
 SIFT and 15$\times$ on GloVe, against 55$\times$ and 9$\times$ for IVF-Flat. The order is the same
-at 0.90:
-\begin{itemize}
-\item SIFT: HNSW 8,581\,QPS vs IVF-Flat 3,030 (279$\times$ and 98$\times$ exact);
-\item GloVe: HNSW 1,241 vs IVF-Flat 995 (36$\times$ and 29$\times$).
-\end{itemize}
-% SOURCE: results/tables/part2_qps.tex
+at 0.90 (Table~\ref{tab:part2c}): 279$\times$ and 98$\times$ exact on SIFT, 36$\times$ and
+29$\times$ on GloVe.
+% SOURCE: results/tables/part2_qps.tex (speed-ups), results/tables/part2_compact.tex (QPS at 0.90 and 0.95)
 
 \textbf{Why IVF-PQ fails.} IVF-PQ never reaches 0.90 (Table~\ref{tab:part2c}). It ranks
 candidates by distances computed on quantised codes, and that quantisation error does not depend
@@ -297,9 +294,10 @@ size: the IVF slowdown at $s=1$ was 1.5$\times$, not 2$\times$.
   The linear model from the 1M timings predicted 4.87 and 3.69\,ms, so latency scales about
   linearly with $n$. ANN pays off only if throughput matters.
 \item \emph{10M: use HNSW.} Exact search is \emph{projected} at 324.9 and 245.8\,ms, because
-  every query scans all vectors. HNSW at the measured 0.95 settings is \emph{extrapolated} to 0.24
-  and 2.22\,ms, since its search grows roughly with $\log n$. It needs 6.11 and 6.26\,GiB, which
-  fits.
+  every query scans all vectors. Memory is not the problem: the raw vectors alone take 4.77 and
+  3.73\,GiB, so exact search fails on latency, not RAM. HNSW at the measured 0.95 settings is
+  \emph{extrapolated} to 0.24 and 2.22\,ms, since its search grows roughly with $\log n$. It needs
+  6.11 and 6.26\,GiB, which fits.
 \item \emph{Caveats at 10M:}
   \begin{itemize}
   \item building needs the raw vectors and the graph in RAM at once (about 10.9 and 10.0\,GiB);
@@ -308,24 +306,23 @@ size: the IVF slowdown at $s=1$ was 1.5$\times$, not 2$\times$.
   \item IVF-PQ with re-ranking from disk is the fallback if memory is tight.
   \end{itemize}
 \end{itemize}
-% SOURCE: results/tables/q4_compact.tex, results/tables/q4.tex, results/q4_notes.md
+% SOURCE: results/tables/q4_compact.tex, results/tables/q4.tex (raw GiB 4.77 / 3.73), results/q4_notes.md
 
 \textbf{Q5. How this benchmark could mislead.}
 \begin{enumerate}
 \item \emph{Machine-state drift (tested, not corrected).}
   \begin{itemize}
   \item The overnight canary varied by 21.3\% (SIFT) and 23.3\% (GloVe).
-  \item With the earlier, larger quick grids, the quick pipeline took 9\,min 02\,s plugged in
-    from a cold cache but 16\,min 52\,s on battery with a warm cache (measured earlier, recorded
-    in the README).
+  \item Power state matters too: the quick pipeline ran much slower on battery than plugged in
+    (see the README).
   \item Pinning and medians cut noise within a measurement, not across hours. Part 4's
     close-in-time control agreed within 2\%.
   \end{itemize}
 \item \emph{``Batch'' speed is a library heuristic (tested).}
   \begin{itemize}
   \item FAISS 1.14.3 uses BLAS only when queries $\times\,d\ge$128,000.
-  \item A single-thread batch over 100K GloVe vectors ran at 459\,QPS with 1,279 queries but
-    2,612 with 1,280 (measured earlier, recorded in the README).
+  \item A single-thread batch over 100K GloVe vectors ran at 216\,QPS with 1,279 queries but
+    1,306 with 1,280 (timed on battery; recall 1.0000 for both).
   \item Our 5,000-query batches are above the threshold.
   \end{itemize}
 \item \emph{Single thread, one machine (not tested elsewhere).} 20 threads helped SIFT batches
@@ -339,9 +336,9 @@ size: the IVF slowdown at $s=1$ was 1.5$\times$, not 2$\times$.
   sensitivity to $\epsilon$ is not.
 \end{enumerate}
 % SOURCE: results/part2_notes.md (canary spread, tune vs test gap); README.md "Earlier quick-mode
-% runs" table (9 min 02 s plugged in / cold cache, 16 min 52 s on battery / warm cache);
-% results/env.json (faiss_distance_compute_blas_threshold = 128000); README.md "FAISS batch
-% threshold" table (1,279 queries 459 QPS, 1,280 queries 2,612 QPS); results/tables/part1.tex
+% runs" (power state; no number quoted here); results/env.json (faiss_distance_compute_blas_threshold
+% = 128000); results/results.csv (part=1, experiment_tag=part1_blas_threshold: 1,279 queries 216 QPS,
+% 1,280 queries 1,306 QPS, recall 1.0000, power_plugged=false); results/tables/part1.tex
 % (761 vs 342, 383 vs 348 QPS; 5,000-query batch); results/results.csv (part=2, glove hnsw M=16
 % efSearch=1024: tune 0.9490, test 0.9527); results/part1_agreement.json (65 ties, 0.9935);
 % results/part4_notes.md (control ratios 0.98 / 1.01)
