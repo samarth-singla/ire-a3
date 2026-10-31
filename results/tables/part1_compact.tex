@@ -1,0 +1,16 @@
+\begin{table}[!t]
+\centering
+\footnotesize
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lrrrrr}
+\toprule
+Data & n & Single QPS & Batch QPS & Ratio & Set match \\
+\midrule
+SIFT & 1,000,000 & 30.8 & 342 & 11.1$\times$ & 0.9935 \\
+GloVe & 1,183,514 & 34.4 & 348 & 10.1$\times$ & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\caption{Exact search, 1 thread: one query per call vs one batch call; agreement with the file's top-10 sets.}
+\label{tab:part1c}
+\end{table}
